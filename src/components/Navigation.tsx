@@ -94,7 +94,7 @@ export const Navigation: React.FC = () => {
             opacity: isOpen ? 1 : 0
           }}
           transition={{ duration: 0.3 }}
-          className="md:hidden overflow-hidden bg-white dark:bg-gray-900 rounded-lg mt-1 sm:mt-2 shadow-xl"
+          className="md:hidden overflow-hidden bg-white dark:bg-gray-900 rounded-lg mt-1 sm:mt-2 shadow-xl z-50"
         >
           <div className="py-3 sm:py-4 space-y-1 sm:space-y-2">
             {navItems.map((item, index) => (
@@ -105,6 +105,7 @@ export const Navigation: React.FC = () => {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
+                whileTap={{ scale: 0.95, backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
               >
                 {item.name}
               </motion.button>
