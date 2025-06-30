@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Project, GitHubProfile } from '../types';
 
-const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3003';
+const API_BASE = import.meta.env.PROD ? 'https://real-time-portfolio-1.onrender.com' : 'http://localhost:3003';
 
 export const api = axios.create({
   baseURL: API_BASE,
