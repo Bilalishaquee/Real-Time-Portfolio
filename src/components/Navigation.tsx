@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 export const Navigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,16 +25,38 @@ export const Navigation: React.FC = () => {
     { name: 'Contact', href: '#contact' }
   ];
 
-  const scrollToSection = (href: string) => {
-    if (href === '#') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => {
+    // Close menu when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
+        setIsOpen(false);
       }
-    }
-    setIsOpen(false);
+    };
+    
+    // Add event listener for mobile touch events
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const scrollToSection = (href: string) => {
+    // Add a small delay to ensure the click event is fully processed
+    setTimeout(() => {
+      if (href === '#') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      // Close the mobile menu after navigation
+      setIsOpen(false);
+    }, 10);
   };
 
   return (
@@ -87,31 +110,51 @@ export const Navigation: React.FC = () => {
         </div>
 
         {/* Mobile Navigation Menu */}
-        <motion.div
-          initial={false}
-          animate={{
-            height: isOpen ? 'auto' : 0,
-            opacity: isOpen ? 1 : 0
-          }}
-          transition={{ duration: 0.3 }}
-          className="md:hidden overflow-hidden bg-white dark:bg-gray-900 rounded-lg mt-1 sm:mt-2 shadow-xl z-50"
-        >
-          <div className="py-3 sm:py-4 space-y-1 sm:space-y-2">
-            {navItems.map((item, index) => (
-              <motion.button
-                key={item.name}
-                onClick={() => scrollToSection(item.href)}
-                className="block w-full text-left px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-300"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
-                whileTap={{ scale: 0.95, backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Backdrop overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40 md:hidden"
+                onClick={() => setIsOpen(false)}
+              />
+              
+              {/* Menu */}
+              <motion.div
+                ref={menuRef}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden absolute left-0 right-0 top-full mt-1 sm:mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-50 overflow-hidden"
               >
-                {item.name}
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
+              <div className="py-3 sm:py-4 space-y-1 sm:space-y-2">
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="block w-full"
+                  >
+                    <button
+                      onClick={() => scrollToSection(item.href)}
+                      onTouchStart={() => {}}
+                      className="block w-full text-left px-4 py-3 text-sm sm:text-base text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-300 active:bg-blue-100 dark:active:bg-blue-900 active:text-blue-600 dark:active:text-blue-300 touch-manipulation"
+                    >
+                      {item.name}
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );
